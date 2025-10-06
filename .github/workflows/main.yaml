@@ -10,7 +10,7 @@ env:
   REGISTRY: asia-south1-docker.pkg.dev
   REPOSITORY: kubesub
   IMAGE: the-project-backend
-  SERVICE: todo-backend-0
+  SERVICE: todo-backend
   BRANCH: ${{ github.ref_name }}
 
 jobs:
