@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  namespace: project
+  # namespace: project
   name: todo-cron
 spec:
   schedule: "* * * * *"
