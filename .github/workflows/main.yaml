@@ -10,7 +10,7 @@ env:
   REGISTRY: asia-south1-docker.pkg.dev
   REPOSITORY: kubesub
   IMAGE: the-project-backend
-  SERVICE: todo-backend
+  SERVICE: todo-backend-0
   BRANCH: ${{ github.ref_name }}
 
 jobs:
@@ -36,8 +36,8 @@ jobs:
 
       - name: "Configure Docker for Artifact Registry"
         run: gcloud auth configure-docker ${{ env.REGISTRY }}
-      # - run: gcloud auth configure-docker
 
+      # Fetches details(cluster endpoint, certificate, and a token) for this specific cluster https://github.com/google-github-actions/get-gke-credentials
       - name: "Get GKE credentials"
         uses: google-github-actions/get-gke-credentials@v2
         with:
@@ -61,5 +61,5 @@ jobs:
         run: |-
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
           kustomize build . | kubectl apply -f -
-          kubectl rollout status deployment $SERVICE
+          kubectl rollout status statefulset $SERVICE
           kubectl get services -o wide
