@@ -1,0 +1,6 @@
+apiVersion:
+kind: Kustomization
+resources:
+  - manifests/configmap.yaml
+  - manifests/secret.yaml
+  - manifests/statefulset.yaml
