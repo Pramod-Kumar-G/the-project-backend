@@ -39,24 +39,16 @@ spec:
             - mountPath: /data/db
               subPath: mongo
               name: mongo-data-storage
+          readinessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 5
+            periodSeconds: 5
         - name: todo-backend
           image: PROJECT/IMAGE
           ports:
             - containerPort: 3001
               name: todo-backend
-          # env:
-          #   - name: MONGO_INITDB_ROOT_USERNAME
-          #     valueFrom:
-          #       secretKeyRef:
-          #         name: mongo-secret
-          #         key: MONGO_INITDB_ROOT_USERNAME
-          #   - name: MONGO_INITDB_ROOT_PASSWORD
-          #     valueFrom:
-          #       secretKeyRef:
-          #         name: mongo-secret
-          #         key: MONGO_INITDB_ROOT_PASSWORD
-          #   - name: MONGODB_URI
-          #     value: "mongodb://$(MONGO_INITDB_ROOT_USERNAME):$(MONGO_INITDB_ROOT_PASSWORD)@localhost:27017/todos?authSource=admin"
           env:
             - name: MONGODB_URI
               valueFrom:
@@ -66,6 +58,11 @@ spec:
           envFrom:
             - configMapRef:
                 name: todo-backend-config
+          startupProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 5
+            periodSeconds: 5
   volumeClaimTemplates:
     - metadata:
         name: mongo-data-storage

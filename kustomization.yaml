@@ -6,4 +6,4 @@ resources:
   - manifests/statefulset.yaml
 images:
   - name: PROJECT/IMAGE
-    newName: asia-south1-docker.pkg.dev/my-gke-473202/kubesub/the-project-backend:main-6cd165f641026ecb2a0b095738d8645c0d414ed6
+    newName: asia-south1-docker.pkg.dev/my-gke-473202/kubesub/the-project-backend:main-aee38b832394ad54aab18b6ad27115a38e29a5ef
