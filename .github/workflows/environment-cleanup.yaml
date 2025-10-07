@@ -1,0 +1,17 @@
+name: Delete Environment
+
+on: delete
+
+jobs:
+  delete-namespace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Delete namespace
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+
+          echo "Deleting namespace $BRANCH_NAME"
+          kubectl delete namespace $BRANCH_NAME || echo "Namespace does not exist"
