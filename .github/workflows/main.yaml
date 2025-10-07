@@ -59,6 +59,14 @@ jobs:
 
       - name: Deploy
         run: |-
+          if [ "${GITHUB_REF#refs/heads/}" = "main" ]; then
+            NAMESPACE="project"
+          else
+            NAMESPACE="${GITHUB_REF#refs/heads/}"
+          fi
+          kubectl create namespace $NAMESPACE || true
+          kubectl config set-context --current --namespace=$NAMESPACE
+          kustomize edit set namespace $NAMESPACE
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
           kustomize build . | kubectl apply -f -
           kubectl rollout status statefulset $SERVICE
