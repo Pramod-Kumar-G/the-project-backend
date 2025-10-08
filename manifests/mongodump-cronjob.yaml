@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: mongo-backup
+              image: mongo:6.0
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Running mongodump..."
+                  mongodump --uri="mongodb://rambo:sekret@todo-backend-svc:27017/" \
+                    --archive=/backup/mongo-$(date +%F).gz --gzip
+                  echo "Backup complete!"
+              volumeMounts:
+                - name: mongo-backup-storage
+                  mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+            - name: mongo-backup-storage
+              persistentVolumeClaim:
+                claimName: mongo-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-backup-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
