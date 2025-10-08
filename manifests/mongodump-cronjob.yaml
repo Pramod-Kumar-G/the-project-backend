@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mongodb-backup
+  name: mongodb-backup-gcs
 spec:
   schedule: "0 0 * * *"
   jobTemplate:
@@ -10,23 +10,36 @@ spec:
         spec:
           containers:
             - name: mongo-backup
-              image: mongo:6.0
+              image: google/cloud-sdk:latest
+              env:
+                - name: MONGO_URI
+                  value: "mongodb://rambo:sekret@todo-backend-svc:27017/"
+                - name: BUCKET_NAME
+                  value: "pramod-mongo-backups"
+              volumeMounts:
+                - name: gcp-credentials
+                  mountPath: /secrets
+                  readOnly: true
               command:
                 - /bin/sh
                 - -c
                 - |
+                  export GOOGLE_APPLICATION_CREDENTIALS="/secrets/gcp-key.json"
+
+                  BACKUP_FILE="/tmp/mongo-$(date +%F).gz"
+
                   echo "Running mongodump..."
-                  mongodump --uri="mongodb://rambo:sekret@todo-backend-svc:27017/" \
-                    --archive=/backup/mongo-$(date +%F).gz --gzip
+                  mongodump --uri="$MONGO_URI" --archive=$BACKUP_FILE --gzip
+
+                  echo "Uploading backup to GCS..."
+                  gsutil cp $BACKUP_FILE gs://$BUCKET_NAME/
+
                   echo "Backup complete!"
-              volumeMounts:
-                - name: mongo-backup-storage
-                  mountPath: /backup
           restartPolicy: OnFailure
           volumes:
-            - name: mongo-backup-storage
-              persistentVolumeClaim:
-                claimName: mongo-backup-pvc
+            - name: gcp-credentials
+              secret:
+                secretName: gcp-credentials
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
