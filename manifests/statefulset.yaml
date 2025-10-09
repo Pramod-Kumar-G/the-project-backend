@@ -16,7 +16,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: todo-backend
-  # namespace: project
 spec:
   serviceName: "todo-backend-svc"
   selector:
