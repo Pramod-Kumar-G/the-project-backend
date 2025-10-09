@@ -4,7 +4,7 @@ resources:
   - manifests/configmap.yaml
   - manifests/secret.yaml
   - manifests/statefulset.yaml
-  - manifests/mongodump-cronjob.yaml
+  - manifests/final-backup-cronjob.yaml
 images:
   - name: PROJECT/IMAGE
     newName: asia-south1-docker.pkg.dev/my-gke-473202/kubesub/the-project-backend:main-aee38b832394ad54aab18b6ad27115a38e29a5ef

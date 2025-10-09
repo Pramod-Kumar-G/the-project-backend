@@ -1,0 +1,75 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: todo-db-backup-final
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 4
+      template:
+        spec:
+          # --- Container 1: Creates the MongoDB Backup ---
+          containers:
+            - name: mongo-backup
+              image: mongo:6.0
+              env:
+                - name: MONGODB_URI
+                  value: "mongodb://rambo:sekret@todo-backend-svc:27017/"
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  BACKUP_FILE="/shared/mongo-backup-$(date +%Y-%m-%d-%H%M%S).gz"
+                  echo "Starting MongoDB dump to shared volume..."
+
+                  mongodump --uri="${MONGODB_URI}" --archive --gzip > "${BACKUP_FILE}"
+
+                  echo "Backup created successfully: ${BACKUP_FILE}"
+              volumeMounts:
+                - name: shared-backup-volume
+                  mountPath: /shared
+
+            # --- Container 2: Uploads the Backup to GCS ---
+            - name: gcloud-upload
+              image: google/cloud-sdk:latest
+              env:
+                - name: GCS_BUCKET_NAME
+                  value: "pramod-mongo-backups"
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /secrets/gcs-credentials.json
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -e
+                  echo "GCS uploader started. Activating service account..."
+                  gcloud auth activate-service-account --key-file=/secrets/gcs-credentials.json
+
+                  echo "Waiting for backup file to appear in /shared..."
+                  while [ -z "$(ls -A /shared/mongo-backup-*.gz 2>/dev/null)" ]; do
+                    sleep 5
+                  done
+
+                  LATEST_BACKUP=$(ls -t /shared/mongo-backup-*.gz | head -n 1)
+                  echo "Found backup file: $LATEST_BACKUP"
+                  echo "Uploading to bucket gs://${GCS_BUCKET_NAME}..."
+                  gsutil cp "$LATEST_BACKUP" gs://${GCS_BUCKET_NAME}/
+                  echo "Upload complete."
+              volumeMounts:
+                - name: shared-backup-volume
+                  mountPath: /shared
+                - name: gcs-credentials-volume
+                  mountPath: /secrets
+                  readOnly: true
+
+          volumes:
+            - name: shared-backup-volume
+              emptyDir: {}
+            - name: gcs-credentials-volume
+              secret:
+                secretName: gcs-credentials
+                items:
+                  - key: gcs-credentials.json
+                    path: gcs-credentials.json
+
+          restartPolicy: OnFailure
