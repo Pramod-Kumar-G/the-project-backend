@@ -13,6 +13,13 @@ spec:
           containers:
             - name: mongo-backup
               image: mongo:6.0
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "250m"
               env:
                 - name: MONGODB_URI
                   value: "mongodb://rambo:sekret@todo-backend-svc:27017/"
