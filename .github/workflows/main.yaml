@@ -5,8 +5,8 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: hooga-cluster
-  GKE_ZONE: asia-south1-b
+  GKE_CLUSTER: rooga-cluster
+  GKE_ZONE: asia-south1-a
   REGISTRY: asia-south1-docker.pkg.dev
   REPOSITORY: kubesub
   IMAGE: the-project-backend
